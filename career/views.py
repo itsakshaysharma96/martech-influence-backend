@@ -20,6 +20,10 @@ class JobPostingViewSet(viewsets.ViewSet):
             'department', 'category', 'job_type', 'location', 'recruiter'
         ).filter(status='published')
         
+        # Skip filtering during schema generation
+        if getattr(self, 'swagger_fake_view', False) or not hasattr(self, 'request') or self.request is None:
+            return queryset
+        
         # Filter by department
         department = self.request.query_params.get('department', None)
         if department:
@@ -223,22 +227,6 @@ class JobApplicationViewSet(viewsets.ViewSet):
                 'utm_refcode': openapi.Schema(type=openapi.TYPE_STRING, description='UTM reference code (optional)', example='REF789'),
             }
         ),
-        manual_parameters=[
-            openapi.Parameter(
-                'resume',
-                openapi.IN_FORM,
-                type=openapi.TYPE_FILE,
-                description='Resume file (PDF, DOC, DOCX)',
-                required=False
-            ),
-            openapi.Parameter(
-                'cover_letter',
-                openapi.IN_FORM,
-                type=openapi.TYPE_FILE,
-                description='Cover letter file (PDF, DOC, DOCX)',
-                required=False
-            ),
-        ],
         consumes=['multipart/form-data'],
         responses={
             201: openapi.Response(description='Job application submitted successfully'),

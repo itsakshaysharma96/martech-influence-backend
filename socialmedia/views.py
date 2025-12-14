@@ -12,6 +12,10 @@ class SocialMediaViewSet(viewsets.ViewSet):
     def get_queryset(self):
         queryset = SocialMedia.objects.filter(is_active=True)
         
+        # Skip filtering during schema generation
+        if getattr(self, 'swagger_fake_view', False) or not hasattr(self, 'request') or self.request is None:
+            return queryset.order_by('platform')
+        
         # Filter by platform
         platform = self.request.query_params.get('platform', None)
         if platform:

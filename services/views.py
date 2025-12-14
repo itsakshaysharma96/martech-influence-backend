@@ -17,6 +17,10 @@ class ServiceViewSet(viewsets.ViewSet):
     def get_queryset(self):
         queryset = Service.objects.select_related('category', 'author').filter(status='published')
         
+        # Skip filtering during schema generation
+        if getattr(self, 'swagger_fake_view', False) or not hasattr(self, 'request') or self.request is None:
+            return queryset
+        
         # Filter by category
         category = self.request.query_params.get('category', None)
         if category:
