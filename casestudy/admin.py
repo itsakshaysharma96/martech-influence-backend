@@ -1,0 +1,422 @@
+from django.contrib import admin
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from django.urls import reverse
+from django import forms
+from tinymce.widgets import TinyMCE
+from .models import CaseStudyCategory, CaseStudy, CaseStudyLead
+
+
+class CaseStudyAdminForm(forms.ModelForm):
+    """Custom form for Case Study admin with better content field"""
+    class Meta:
+        model = CaseStudy
+        fields = '__all__'
+        widgets = {
+            'content': TinyMCE(attrs={'cols': 120, 'rows': 80}),
+            'short_description': forms.Textarea(attrs={
+                'rows': 5,
+                'cols': 100,
+                'style': 'width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd;',
+            }),
+            'short_title': forms.TextInput(attrs={
+                'style': 'width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; font-size: 14px;',
+                'placeholder': 'Enter short title...'
+            }),
+            'results_summary': forms.Textarea(attrs={
+                'rows': 4,
+                'cols': 100,
+                'style': 'width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd;',
+            }),
+        }
+
+
+@admin.register(CaseStudyCategory)
+class CaseStudyCategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'is_active_badge', 'case_study_count', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name', 'description']
+    prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ['created_at', 'updated_at']
+    list_per_page = 25
+    
+    fieldsets = (
+        ('Category Information', {
+            'fields': ('name', 'slug', 'description', 'is_active')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def is_active_badge(self, obj):
+        if obj.is_active:
+            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
+        return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
+    is_active_badge.short_description = 'Status'
+
+    def case_study_count(self, obj):
+        count = obj.case_studies.count()
+        return format_html('<strong style="color: #007bff;">{}</strong>', count)
+    case_study_count.short_description = 'Case Studies'
+
+
+@admin.register(CaseStudy)
+class CaseStudyAdmin(admin.ModelAdmin):
+    form = CaseStudyAdminForm
+    list_display = [
+        'title_preview', 'short_title_preview', 'client_name_display', 'author', 'category', 'status_badge', 
+        'is_featured', 'is_pinned', 'is_featured_badge', 'estimated_time_display', 'views_count', 
+        'downloads_count', 'engagement_score', 'created_at', 'published_at'
+    ]
+    list_filter = ['status', 'is_featured', 'is_pinned', 'category', 'client_industry', 'created_at', 'published_at']
+    search_fields = ['title', 'short_title', 'content', 'short_description', 'client_name', 'client_industry', 'meta_keywords']
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = [
+        'created_at', 'updated_at', 'views_count', 'likes_count', 
+        'shares_count', 'downloads_count', 'banner_image_preview', 'mobile_image_preview', 
+        'engagement_score_display', 'content_preview'
+    ]
+    date_hierarchy = 'created_at'
+    list_per_page = 25
+    list_editable = ['is_featured', 'is_pinned']
+    
+    fieldsets = (
+        ('📝 Basic Information', {
+            'fields': ('title', 'short_title', 'slug', 'author', 'category', 'status'),
+            'classes': ('wide',),
+        }),
+        ('👔 Client Information', {
+            'fields': ('client_name', 'client_industry', 'project_duration', 'project_budget', 'results_summary'),
+            'classes': ('wide',),
+        }),
+        ('📄 Content', {
+            'fields': ('short_description', 'content', 'content_preview', 'estimated_time'),
+            'classes': ('wide',),
+        }),
+        ('🖼️ Images', {
+            'fields': ('banner_image', 'banner_image_preview', 'mobile_image', 'mobile_image_preview'),
+            'classes': ('wide',),
+        }),
+        ('🔍 SEO Settings', {
+            'fields': ('meta_title', 'meta_description', 'meta_keywords'),
+            'classes': ('collapse',)
+        }),
+        ('⚙️ Settings', {
+            'fields': ('is_featured', 'is_pinned', 'published_at')
+        }),
+        ('📊 Engagement Metrics', {
+            'fields': ('views_count', 'likes_count', 'shares_count', 'downloads_count', 'engagement_score_display'),
+            'classes': ('collapse',)
+        }),
+        ('🕐 Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def title_preview(self, obj):
+        title = obj.title or "Untitled"
+        if len(title) > 50:
+            title = title[:50] + "..."
+        return format_html('<strong style="color: #333;">{}</strong>', title)
+    title_preview.short_description = 'Title'
+
+    def short_title_preview(self, obj):
+        if obj.short_title:
+            short_title = obj.short_title[:60] + "..." if len(obj.short_title) > 60 else obj.short_title
+            return format_html(
+                '<span style="color: #666; font-size: 12px; padding: 4px 8px; background: #f8f9fa; border-radius: 4px; display: inline-block;">{}</span>', 
+                short_title
+            )
+        return format_html('<span style="color: #999;">—</span>')
+    short_title_preview.short_description = 'Short Title'
+
+    def client_name_display(self, obj):
+        if obj.client_name:
+            return format_html(
+                '<span style="background-color: #e3f2fd; color: #1976d2; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">🏢 {}</span>',
+                obj.client_name
+            )
+        return format_html('<span style="color: #999;">—</span>')
+    client_name_display.short_description = 'Client'
+
+    def status_badge(self, obj):
+        status_colors = {
+            'draft': '#6c757d',
+            'published': '#28a745',
+            'archived': '#dc3545'
+        }
+        color = status_colors.get(obj.status, '#6c757d')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold;">{}</span>',
+            color, obj.get_status_display()
+        )
+    status_badge.short_description = 'Status'
+
+    def is_featured_badge(self, obj):
+        if obj.is_featured:
+            return format_html('<span style="background-color: #ffc107; color: #000; padding: 3px 8px; border-radius: 10px; font-size: 10px;">⭐ Featured</span>')
+        return format_html('<span style="color: #999;">—</span>')
+    is_featured_badge.short_description = 'Featured'
+
+    def estimated_time_display(self, obj):
+        if obj.estimated_time:
+            return format_html(
+                '<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">⏱ {} min</span>',
+                obj.estimated_time
+            )
+        return format_html('<span style="color: #999;">—</span>')
+    estimated_time_display.short_description = 'Read Time'
+
+    def engagement_score(self, obj):
+        score = obj.views_count + (obj.likes_count * 2) + (obj.shares_count * 3) + (obj.downloads_count * 5)
+        if score > 100:
+            color = '#28a745'
+        elif score > 50:
+            color = '#ffc107'
+        else:
+            color = '#6c757d'
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold;">{}</span>',
+            color, score
+        )
+    engagement_score.short_description = 'Engagement'
+
+    def engagement_score_display(self, obj):
+        score = obj.views_count + (obj.likes_count * 2) + (obj.shares_count * 3) + (obj.downloads_count * 5)
+        return format_html(
+            '<div style="padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; text-align: center;">'
+            '<h3 style="margin: 0; font-size: 32px;">{}</h3>'
+            '<p style="margin: 5px 0 0 0; font-size: 12px;">Total Engagement Score</p>'
+            '</div>',
+            score
+        )
+    engagement_score_display.short_description = 'Engagement Score'
+
+    def banner_image_preview(self, obj):
+        if obj.banner_image:
+            image_url = obj.banner_image.url
+            file_name = obj.banner_image.name.split('/')[-1]
+            file_size = obj.banner_image.size if hasattr(obj.banner_image, 'size') else 'Unknown'
+            if isinstance(file_size, int):
+                if file_size < 1024:
+                    size_str = f"{file_size} B"
+                elif file_size < 1024 * 1024:
+                    size_str = f"{file_size / 1024:.1f} KB"
+                else:
+                    size_str = f"{file_size / (1024 * 1024):.1f} MB"
+            else:
+                size_str = 'Unknown'
+            
+            return format_html(
+                '<div style="margin: 15px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">'
+                '<h4 style="margin: 0 0 15px 0; color: white; font-size: 16px; font-weight: bold;">🖼️ Banner Image (Desktop)</h4>'
+                '<img src="{}" width="100%" max-width="600" height="300" style="object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 3px solid white; margin-bottom: 15px;" />'
+                '<div style="padding: 12px; background: rgba(255,255,255,0.95); border-radius: 6px;">'
+                '<p style="margin: 5px 0; color: #333; font-weight: bold;">📎 {}</p>'
+                '<p style="margin: 5px 0; color: #666; font-size: 12px;">Size: {}</p>'
+                '<a href="{}" target="_blank" style="display: inline-block; margin-top: 8px; padding: 8px 18px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 13px; font-weight: bold;">🔗 View Full Image</a>'
+                '</div>'
+                '</div>',
+                image_url, file_name, size_str, image_url
+            )
+        return format_html(
+            '<div style="padding: 30px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 8px; text-align: center; border: 2px dashed #ccc;">'
+            '<p style="color: #999; font-size: 14px; margin: 0;">🖼️ No banner image uploaded</p>'
+            '<p style="color: #bbb; font-size: 12px; margin: 5px 0 0 0;">Recommended: Wide format (1920x600px)</p>'
+            '</div>'
+        )
+    banner_image_preview.short_description = "🖼️ Banner Image Preview"
+
+    def mobile_image_preview(self, obj):
+        if obj.mobile_image:
+            image_url = obj.mobile_image.url
+            file_name = obj.mobile_image.name.split('/')[-1]
+            file_size = obj.mobile_image.size if hasattr(obj.mobile_image, 'size') else 'Unknown'
+            if isinstance(file_size, int):
+                if file_size < 1024:
+                    size_str = f"{file_size} B"
+                elif file_size < 1024 * 1024:
+                    size_str = f"{file_size / 1024:.1f} KB"
+                else:
+                    size_str = f"{file_size / (1024 * 1024):.1f} MB"
+            else:
+                size_str = 'Unknown'
+            
+            return format_html(
+                '<div style="margin: 15px 0; padding: 20px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">'
+                '<h4 style="margin: 0 0 15px 0; color: white; font-size: 16px; font-weight: bold;">📱 Mobile Image</h4>'
+                '<img src="{}" width="100%" max-width="400" height="250" style="object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 3px solid white; margin-bottom: 15px;" />'
+                '<div style="padding: 12px; background: rgba(255,255,255,0.95); border-radius: 6px;">'
+                '<p style="margin: 5px 0; color: #333; font-weight: bold;">📎 {}</p>'
+                '<p style="margin: 5px 0; color: #666; font-size: 12px;">Size: {}</p>'
+                '<a href="{}" target="_blank" style="display: inline-block; margin-top: 8px; padding: 8px 18px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-size: 13px; font-weight: bold;">🔗 View Full Image</a>'
+                '</div>'
+                '</div>',
+                image_url, file_name, size_str, image_url
+            )
+        return format_html(
+            '<div style="padding: 30px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 8px; text-align: center; border: 2px dashed #ccc;">'
+            '<p style="color: #999; font-size: 14px; margin: 0;">📱 No mobile image uploaded</p>'
+            '<p style="color: #bbb; font-size: 12px; margin: 5px 0 0 0;">Recommended: Mobile format (768x400px)</p>'
+            '</div>'
+        )
+    mobile_image_preview.short_description = "📱 Mobile Image Preview"
+
+    def content_preview(self, obj):
+        if obj.content:
+            content = obj.content[:500] + "..." if len(obj.content) > 500 else obj.content
+            import re
+            clean_content = re.sub(r'<[^>]+>', '', content)
+            return format_html(
+                '<div style="max-height: 350px; overflow-y: auto; padding: 20px; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-radius: 12px; border: 2px solid #0ea5e9; margin: 15px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">'
+                '<h4 style="margin: 0 0 15px 0; color: #0369a1; font-size: 16px; font-weight: bold; display: flex; align-items: center;">'
+                '<span style="margin-right: 8px;">📄</span> Content Preview</h4>'
+                '<div style="white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.8; color: #1e293b; background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #0ea5e9;">{}</div>'
+                '</div>',
+                clean_content
+            )
+        return format_html(
+            '<div style="padding: 20px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; text-align: center; border: 2px dashed #f59e0b;">'
+            '<p style="color: #92400e; font-size: 14px; margin: 0; font-weight: 500;">⚠️ No content available</p>'
+            '</div>'
+        )
+    content_preview.short_description = "📄 Content Preview"
+
+    actions = ['make_published', 'make_draft', 'make_archived']
+
+    def make_published(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(status='published', published_at=timezone.now())
+        self.message_user(request, f'{updated} case study(ies) marked as published.')
+    make_published.short_description = "Mark selected case studies as published"
+
+    def make_draft(self, request, queryset):
+        updated = queryset.update(status='draft')
+        self.message_user(request, f'{updated} case study(ies) marked as draft.')
+    make_draft.short_description = "Mark selected case studies as draft"
+
+    def make_archived(self, request, queryset):
+        updated = queryset.update(status='archived')
+        self.message_user(request, f'{updated} case study(ies) marked as archived.')
+    make_archived.short_description = "Mark selected case studies as archived"
+
+
+@admin.register(CaseStudyLead)
+class CaseStudyLeadAdmin(admin.ModelAdmin):
+    list_display = [
+        'name', 'email', 'case_study_link', 'company', 'job_title_display', 'lead_source_badge', 
+        'utm_source', 'contact_status', 'conversion_status', 'created_at'
+    ]
+    list_filter = ['lead_source', 'is_contacted', 'is_converted', 'utm_source', 'utm_medium', 'utm_campaign', 'created_at']
+    search_fields = ['name', 'email', 'company', 'job_title', 'case_study__title', 'utm_source', 'utm_campaign']
+    readonly_fields = ['created_at', 'updated_at', 'utm_summary']
+    date_hierarchy = 'created_at'
+    list_per_page = 25
+    
+    fieldsets = (
+        ('👤 Lead Information', {
+            'fields': ('case_study', 'name', 'email', 'phone', 'company', 'job_title', 'lead_source', 'message')
+        }),
+        ('📊 UTM Tracking', {
+            'fields': ('utm_source', 'utm_medium', 'utm_campaign', 'utm_refcode', 'utm_summary'),
+            'classes': ('collapse',)
+        }),
+        ('✅ Status & Notes', {
+            'fields': ('is_contacted', 'is_converted', 'notes')
+        }),
+        ('🕐 Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def case_study_link(self, obj):
+        if obj.case_study:
+            url = reverse('admin:casestudy_casestudy_change', args=[obj.case_study.pk])
+            return format_html('<a href="{}" style="color: #007bff; text-decoration: none;">{}</a>', url, obj.case_study.title[:50])
+        return format_html('<span style="color: #999;">—</span>')
+    case_study_link.short_description = 'Case Study'
+
+    def job_title_display(self, obj):
+        if obj.job_title:
+            return format_html(
+                '<span style="background-color: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 10px; font-size: 11px;">💼 {}</span>',
+                obj.job_title
+            )
+        return format_html('<span style="color: #999;">—</span>')
+    job_title_display.short_description = 'Job Title'
+
+    def lead_source_badge(self, obj):
+        colors = {
+            'download': '#28a745',
+            'contact': '#007bff',
+            'demo': '#ffc107',
+            'consultation': '#17a2b8',
+            'newsletter': '#6f42c1',
+            'other': '#6c757d'
+        }
+        color = colors.get(obj.lead_source, '#6c757d')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px;">{}</span>',
+            color, obj.get_lead_source_display()
+        )
+    lead_source_badge.short_description = 'Source'
+
+    def contact_status(self, obj):
+        if obj.is_contacted:
+            return format_html('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px;">✓ Contacted</span>')
+        return format_html('<span style="background-color: #ffc107; color: #000; padding: 4px 10px; border-radius: 12px; font-size: 11px;">⏳ Pending</span>')
+    contact_status.short_description = 'Contact'
+
+    def conversion_status(self, obj):
+        if obj.is_converted:
+            return format_html('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">💰 Converted</span>')
+        return format_html('<span style="color: #999;">—</span>')
+    conversion_status.short_description = 'Converted'
+
+    def utm_summary(self, obj):
+        utm_fields = []
+        if obj.utm_source:
+            utm_fields.append(f"Source: <strong>{obj.utm_source}</strong>")
+        if obj.utm_medium:
+            utm_fields.append(f"Medium: <strong>{obj.utm_medium}</strong>")
+        if obj.utm_campaign:
+            utm_fields.append(f"Campaign: <strong>{obj.utm_campaign}</strong>")
+        if obj.utm_refcode:
+            utm_fields.append(f"Ref Code: <strong>{obj.utm_refcode}</strong>")
+        
+        if utm_fields:
+            return format_html(
+                '<div style="padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin: 10px 0;">'
+                '<h4 style="margin: 0 0 10px 0; color: white;">UTM Tracking Summary</h4>'
+                '<div style="line-height: 1.8;">{}</div>'
+                '</div>',
+                mark_safe('<br>'.join(utm_fields))
+            )
+        return format_html('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
+    utm_summary.short_description = 'UTM Summary'
+
+    actions = ['mark_as_contacted', 'mark_as_converted', 'mark_as_uncontacted', 'mark_as_unconverted']
+
+    def mark_as_contacted(self, request, queryset):
+        updated = queryset.update(is_contacted=True)
+        self.message_user(request, f'{updated} lead(s) marked as contacted.')
+    mark_as_contacted.short_description = "✓ Mark selected leads as contacted"
+
+    def mark_as_converted(self, request, queryset):
+        updated = queryset.update(is_converted=True)
+        self.message_user(request, f'{updated} lead(s) marked as converted.')
+    mark_as_converted.short_description = "💰 Mark selected leads as converted"
+
+    def mark_as_uncontacted(self, request, queryset):
+        updated = queryset.update(is_contacted=False)
+        self.message_user(request, f'{updated} lead(s) marked as not contacted.')
+    mark_as_uncontacted.short_description = "Mark selected leads as not contacted"
+
+    def mark_as_unconverted(self, request, queryset):
+        updated = queryset.update(is_converted=False)
+        self.message_user(request, f'{updated} lead(s) marked as not converted.')
+    mark_as_unconverted.short_description = "Mark selected leads as not converted"

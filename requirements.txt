@@ -1,0 +1,7 @@
+Django>=5.1.2
+djangorestframework>=3.14.0
+django-tinymce>=3.5.0
+django-environ>=0.11.2
+Pillow>=10.0.0
+drf-yasg>=1.21.7
+
