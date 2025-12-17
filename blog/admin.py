@@ -34,7 +34,7 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at']
     list_per_page = 25
-    
+
     fieldsets = (
         ('Category Information', {
             'fields': ('name', 'slug', 'description', 'is_active')
@@ -64,7 +64,7 @@ class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at']
     list_per_page = 25
-    
+
     fieldsets = (
         ('Tag Information', {
             'fields': ('name', 'slug')
@@ -85,22 +85,22 @@ class TagAdmin(admin.ModelAdmin):
 class BlogAdmin(admin.ModelAdmin):
     form = BlogAdminForm
     list_display = [
-        'title_preview', 'short_title_preview', 'author', 'category', 'status_badge', 
-        'is_featured', 'is_pinned', 'is_featured_badge', 'estimated_time_display', 'views_count', 
+        'title_preview', 'short_title_preview', 'author', 'category', 'status_badge',
+        'is_featured', 'is_pinned', 'is_featured_badge', 'estimated_time_display', 'views_count',
         'engagement_score', 'created_at', 'published_at'
     ]
     list_filter = ['status', 'is_featured', 'is_pinned', 'category', 'tags', 'created_at', 'published_at']
     search_fields = ['title', 'short_title', 'content', 'short_description', 'meta_keywords']
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = [
-        'created_at', 'updated_at', 'views_count', 'likes_count', 
+        'created_at', 'updated_at', 'views_count', 'likes_count',
         'shares_count', 'banner_image_preview', 'mobile_image_preview', 'engagement_score_display', 'content_preview'
     ]
     filter_horizontal = ['tags']
     date_hierarchy = 'created_at'
     list_per_page = 25
     list_editable = ['is_featured', 'is_pinned']
-    
+
     fieldsets = (
         ('📝 Basic Information', {
             'fields': ('title', 'short_title', 'slug', 'author', 'category', 'tags', 'status'),
@@ -142,7 +142,7 @@ class BlogAdmin(admin.ModelAdmin):
         if obj.short_title:
             short_title = obj.short_title[:60] + "..." if len(obj.short_title) > 60 else obj.short_title
             return format_html(
-                '<span style="color: #666; font-size: 12px; padding: 4px 8px; background: #f8f9fa; border-radius: 4px; display: inline-block;">{}</span>', 
+                '<span style="color: #666; font-size: 12px; padding: 4px 8px; background: #f8f9fa; border-radius: 4px; display: inline-block;">{}</span>',
                 short_title
             )
         return format_html('<span style="color: #999;">—</span>')
@@ -216,7 +216,7 @@ class BlogAdmin(admin.ModelAdmin):
                     size_str = f"{file_size / (1024 * 1024):.1f} MB"
             else:
                 size_str = 'Unknown'
-            
+
             return format_html(
                 '<div style="margin: 15px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">'
                 '<h4 style="margin: 0 0 15px 0; color: white; font-size: 16px; font-weight: bold;">🖼️ Banner Image (Desktop)</h4>'
@@ -252,7 +252,7 @@ class BlogAdmin(admin.ModelAdmin):
                     size_str = f"{file_size / (1024 * 1024):.1f} MB"
             else:
                 size_str = 'Unknown'
-            
+
             return format_html(
                 '<div style="margin: 15px 0; padding: 20px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">'
                 '<h4 style="margin: 0 0 15px 0; color: white; font-size: 16px; font-weight: bold;">📱 Mobile Image</h4>'
@@ -316,7 +316,7 @@ class BlogAdmin(admin.ModelAdmin):
 @admin.register(BlogLeads)
 class BlogLeadsAdmin(admin.ModelAdmin):
     list_display = [
-        'name', 'email', 'blog_link', 'lead_source_badge', 
+        'name', 'email', 'blog_link', 'lead_source_badge',
         'utm_source', 'contact_status', 'conversion_status', 'created_at'
     ]
     list_filter = ['lead_source', 'is_contacted', 'is_converted', 'utm_source', 'utm_medium', 'utm_campaign', 'created_at']
@@ -324,7 +324,7 @@ class BlogLeadsAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'utm_summary']
     date_hierarchy = 'created_at'
     list_per_page = 25
-    
+
     fieldsets = (
         ('👤 Lead Information', {
             'fields': ('blog', 'name', 'email', 'phone', 'company', 'lead_source', 'message')
@@ -386,7 +386,7 @@ class BlogLeadsAdmin(admin.ModelAdmin):
             utm_fields.append(f"Campaign: <strong>{obj.utm_campaign}</strong>")
         if obj.utm_refcode:
             utm_fields.append(f"Ref Code: <strong>{obj.utm_refcode}</strong>")
-        
+
         if utm_fields:
             return format_html(
                 '<div style="padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin: 10px 0;">'

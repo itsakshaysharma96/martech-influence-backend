@@ -23,9 +23,9 @@ env = environ.Env(
 )
 
 # Read .env file from parent directory (outside project)
-env_file = BASE_DIR.parent / '.env'
-if env_file.exists():
-    environ.Env.read_env(env_file)
+# env_file = BASE_DIR.parent / '.env'
+environ.Env.read_env(BASE_DIR / '.env')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -36,8 +36,9 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-j8tz4tx)rotuw27dr8$a_$e)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG', default=True)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['0.0.0.0', 'localhost', '127.0.0.1'])
+# ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['0.0.0.0', 'localhost', '127.0.0.1'])
 
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # Application definition
 
