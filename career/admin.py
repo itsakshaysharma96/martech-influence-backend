@@ -58,8 +58,8 @@ class DepartmentAdmin(admin.ModelAdmin):
 
     def is_active_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
-        return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
+        return mark_safe('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
     is_active_badge.short_description = 'Status'
 
     def job_count(self, obj):
@@ -89,8 +89,8 @@ class JobCategoryAdmin(admin.ModelAdmin):
 
     def is_active_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
-        return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
+        return mark_safe('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
     is_active_badge.short_description = 'Status'
 
     def job_count(self, obj):
@@ -120,14 +120,14 @@ class JobLocationAdmin(admin.ModelAdmin):
 
     def is_remote_badge(self, obj):
         if obj.is_remote:
-            return format_html('<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">🌐 Remote</span>')
-        return format_html('<span style="color: #999;">—</span>')
+            return mark_safe('<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">🌐 Remote</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     is_remote_badge.short_description = 'Remote'
 
     def is_active_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
-        return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
+        return mark_safe('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
     is_active_badge.short_description = 'Status'
 
     def job_count(self, obj):
@@ -157,8 +157,8 @@ class JobTypeAdmin(admin.ModelAdmin):
 
     def is_active_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
-        return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
+        return mark_safe('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
     is_active_badge.short_description = 'Status'
 
     def job_count(self, obj):
@@ -240,7 +240,7 @@ class JobPostingAdmin(admin.ModelAdmin):
             if obj.location.is_remote:
                 return format_html('<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">🌐 {}</span>', location)
             return format_html('<span style="color: #666;">📍 {}</span>', location)
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     location_display.short_description = 'Location'
 
     def status_badge(self, obj):
@@ -270,7 +270,7 @@ class JobPostingAdmin(admin.ModelAdmin):
                 '<span style="background-color: {}; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">{}</span>',
                 color, obj.get_experience_level_display()
             )
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     experience_level_display.short_description = 'Level'
 
     def salary_display(self, obj):
@@ -282,7 +282,7 @@ class JobPostingAdmin(admin.ModelAdmin):
             )
         elif obj.salary_min:
             return format_html('<span style="color: #28a745;">{}{}+ {}</span>', obj.salary_currency or '', obj.salary_min, f'/{obj.salary_period}' if obj.salary_period else '')
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     salary_display.short_description = 'Salary'
 
     actions = ['make_published', 'make_closed', 'make_draft', 'make_archived']
@@ -391,14 +391,14 @@ class JobApplicationAdmin(admin.ModelAdmin):
                 '</div>',
                 mark_safe('<br>'.join(info))
             )
-        return format_html('<p style="color: #999;">No additional information</p>')
+        return mark_safe('<p style="color: #999;">No additional information</p>')
     applicant_info_display.short_description = 'Applicant Info'
 
     def job_posting_link(self, obj):
         if obj.job_posting:
             url = reverse('admin:career_jobposting_change', args=[obj.job_posting.pk])
             return format_html('<a href="{}" style="color: #007bff; text-decoration: none;">{}</a>', url, obj.job_posting.title[:50])
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     job_posting_link.short_description = 'Job Posting'
 
     def status_badge(self, obj):
@@ -441,7 +441,7 @@ class JobApplicationAdmin(admin.ModelAdmin):
     def experience_display(self, obj):
         if obj.years_of_experience:
             return format_html('<span style="color: #666;">{} years</span>', obj.years_of_experience)
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     experience_display.short_description = 'Experience'
 
     def rating_display(self, obj):
@@ -451,7 +451,7 @@ class JobApplicationAdmin(admin.ModelAdmin):
                 '<span style="background-color: {}; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">⭐ {}/10</span>',
                 color, obj.rating
             )
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     rating_display.short_description = 'Rating'
 
     def resume_preview(self, obj):
@@ -462,7 +462,7 @@ class JobApplicationAdmin(admin.ModelAdmin):
                 '</div>',
                 obj.resume.url
             )
-        return format_html('<span style="color: #999;">No resume uploaded</span>')
+        return mark_safe('<span style="color: #999;">No resume uploaded</span>')
     resume_preview.short_description = 'Resume'
 
     def cover_letter_preview(self, obj):
@@ -473,7 +473,7 @@ class JobApplicationAdmin(admin.ModelAdmin):
                 '</div>',
                 obj.cover_letter.url
             )
-        return format_html('<span style="color: #999;">No cover letter uploaded</span>')
+        return mark_safe('<span style="color: #999;">No cover letter uploaded</span>')
     cover_letter_preview.short_description = 'Cover Letter'
 
     def utm_summary(self, obj):
@@ -495,7 +495,7 @@ class JobApplicationAdmin(admin.ModelAdmin):
                 '</div>',
                 mark_safe('<br>'.join(utm_fields))
             )
-        return format_html('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
+        return mark_safe('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
     utm_summary.short_description = 'UTM Summary'
 
     actions = ['mark_shortlisted', 'mark_rejected', 'mark_interview_scheduled']

@@ -149,85 +149,33 @@ class JobApplicationViewSet(viewsets.ViewSet):
     @swagger_auto_schema(
         operation_description="""
         Submit a new job application.
-        
+
         **Content Type:** `multipart/form-data` (Required for file uploads)
-        
+
         **Note:** This endpoint accepts file uploads (resume, cover_letter), so you must use `multipart/form-data` instead of `application/json`.
-        
+
         **Headers:**
         - `Content-Type: multipart/form-data` (Required)
-        
+
         **Field Requirements:**
         - All fields are **optional** (can be null/blank)
         - However, it's recommended to provide at least `job_posting`, `first_name`, `last_name`, `email`, and `resume`
-        
+
         **Application Source Options:**
         - `website` - Website (default)
         - `linkedin` - LinkedIn
         - `indeed` - Indeed
         - `referral` - Referral
         - `other` - Other
-        
+
         **File Upload Fields:**
-        - `resume` - Resume file (PDF, DOC, DOCX recommended)
-        - `cover_letter` - Cover letter file (PDF, DOC, DOCX recommended)
-        
+        - `resume` - Resume file (optional)
+        - `cover_letter` - Cover letter file (optional)
+
         **Alternative to File Upload:**
         - `cover_letter_text` - Text content of cover letter (if not uploading file)
         """,
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=[],
-            properties={
-                'job_posting': openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description='Job Posting ID (optional) - ID of the job you are applying for',
-                    example=1
-                ),
-                'first_name': openapi.Schema(type=openapi.TYPE_STRING, description='First name (optional, max 100 characters)', example='John'),
-                'last_name': openapi.Schema(type=openapi.TYPE_STRING, description='Last name (optional, max 100 characters)', example='Doe'),
-                'email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='Email address (optional)', example='john.doe@example.com'),
-                'phone': openapi.Schema(type=openapi.TYPE_STRING, description='Phone number (optional, max 20 characters)', example='+1234567890'),
-                'address': openapi.Schema(type=openapi.TYPE_STRING, description='Street address (optional)', example='123 Main St'),
-                'city': openapi.Schema(type=openapi.TYPE_STRING, description='City (optional, max 100 characters)', example='New York'),
-                'state': openapi.Schema(type=openapi.TYPE_STRING, description='State (optional, max 100 characters)', example='NY'),
-                'country': openapi.Schema(type=openapi.TYPE_STRING, description='Country (optional, max 100 characters)', example='USA'),
-                'zip_code': openapi.Schema(type=openapi.TYPE_STRING, description='ZIP/Postal code (optional, max 20 characters)', example='10001'),
-                'current_company': openapi.Schema(type=openapi.TYPE_STRING, description='Current company (optional, max 200 characters)', example='Current Corp'),
-                'current_position': openapi.Schema(type=openapi.TYPE_STRING, description='Current position (optional, max 200 characters)', example='Software Engineer'),
-                'years_of_experience': openapi.Schema(type=openapi.TYPE_INTEGER, description='Years of experience (optional)', example=5),
-                'current_salary': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_DECIMAL, description='Current salary (optional)', example=75000.00),
-                'expected_salary': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_DECIMAL, description='Expected salary (optional)', example=90000.00),
-                'notice_period': openapi.Schema(type=openapi.TYPE_STRING, description='Notice period (optional, max 100 characters)', example='2 weeks'),
-                'resume': openapi.Schema(
-                    type=openapi.TYPE_FILE,
-                    description='Resume file (optional) - PDF, DOC, or DOCX file',
-                    format=openapi.FORMAT_BINARY
-                ),
-                'cover_letter': openapi.Schema(
-                    type=openapi.TYPE_FILE,
-                    description='Cover letter file (optional) - PDF, DOC, or DOCX file',
-                    format=openapi.FORMAT_BINARY
-                ),
-                'portfolio_url': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_URI, description='Portfolio URL (optional)', example='https://portfolio.example.com'),
-                'linkedin_url': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_URI, description='LinkedIn profile URL (optional)', example='https://linkedin.com/in/johndoe'),
-                'github_url': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_URI, description='GitHub profile URL (optional)', example='https://github.com/johndoe'),
-                'cover_letter_text': openapi.Schema(type=openapi.TYPE_STRING, description='Cover letter text content (optional, if not uploading file)', example='Dear Hiring Manager...'),
-                'why_interested': openapi.Schema(type=openapi.TYPE_STRING, description='Why are you interested in this role? (optional)', example='I am passionate about...'),
-                'availability_date': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE, description='Date available to start (optional, YYYY-MM-DD)', example='2024-01-15'),
-                'source': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    enum=['website', 'linkedin', 'indeed', 'referral', 'other'],
-                    description='Application source (optional, default: "website")',
-                    example='website'
-                ),
-                'utm_source': openapi.Schema(type=openapi.TYPE_STRING, description='UTM source (optional)', example='google'),
-                'utm_medium': openapi.Schema(type=openapi.TYPE_STRING, description='UTM medium (optional)', example='cpc'),
-                'utm_campaign': openapi.Schema(type=openapi.TYPE_STRING, description='UTM campaign (optional)', example='job_posting'),
-                'utm_refcode': openapi.Schema(type=openapi.TYPE_STRING, description='UTM reference code (optional)', example='REF789'),
-            }
-        ),
-        consumes=['multipart/form-data'],
+        request_body=JobApplicationCreateSerializer,
         responses={
             201: openapi.Response(description='Job application submitted successfully'),
             400: openapi.Response(description='Bad request - validation errors')

@@ -55,13 +55,13 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
                 '</div>',
                 obj.icon.url
             )
-        return format_html('<span style="color: #999;">No icon</span>')
+        return mark_safe('<span style="color: #999;">No icon</span>')
     icon_preview.short_description = 'Icon'
 
     def is_active_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
-        return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
+        return mark_safe('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
     is_active_badge.short_description = 'Status'
 
     def service_count(self, obj):
@@ -146,7 +146,7 @@ class ServiceAdmin(admin.ModelAdmin):
                 '<span style="color: #666; font-size: 12px; padding: 4px 8px; background: #f8f9fa; border-radius: 4px; display: inline-block;">{}</span>', 
                 short_title
             )
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     short_title_preview.short_description = 'Short Title'
 
     def status_badge(self, obj):
@@ -164,22 +164,22 @@ class ServiceAdmin(admin.ModelAdmin):
 
     def is_featured_badge(self, obj):
         if obj.is_featured:
-            return format_html('<span style="background-color: #ffc107; color: #000; padding: 3px 8px; border-radius: 10px; font-size: 10px;">⭐ Featured</span>')
-        return format_html('<span style="color: #999;">—</span>')
+            return mark_safe('<span style="background-color: #ffc107; color: #000; padding: 3px 8px; border-radius: 10px; font-size: 10px;">⭐ Featured</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     is_featured_badge.short_description = 'Featured'
 
     def price_display(self, obj):
         if obj.is_free:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">🆓 Free</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">🆓 Free</span>')
         elif obj.has_custom_pricing:
-            return format_html('<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">💰 Custom</span>')
+            return mark_safe('<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">💰 Custom</span>')
         elif obj.price_starting_from:
             period_text = f"/{obj.price_period}" if obj.price_period else ""
             return format_html(
                 '<span style="color: #28a745; font-weight: bold;">{}{} {}</span>',
                 obj.price_currency or '', obj.price_starting_from, period_text
             )
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     price_display.short_description = 'Price'
 
     def banner_image_preview(self, obj):
@@ -191,7 +191,7 @@ class ServiceAdmin(admin.ModelAdmin):
                 '</div>',
                 obj.banner_image.url
             )
-        return format_html('<p style="color: #999; padding: 20px; background: #f5f5f5; border-radius: 4px;">No banner image uploaded</p>')
+        return mark_safe('<p style="color: #999; padding: 20px; background: #f5f5f5; border-radius: 4px;">No banner image uploaded</p>')
     banner_image_preview.short_description = "Banner Image Preview"
 
     def mobile_image_preview(self, obj):
@@ -203,7 +203,7 @@ class ServiceAdmin(admin.ModelAdmin):
                 '</div>',
                 obj.mobile_image.url
             )
-        return format_html('<p style="color: #999; padding: 20px; background: #f5f5f5; border-radius: 4px;">No mobile image uploaded</p>')
+        return mark_safe('<p style="color: #999; padding: 20px; background: #f5f5f5; border-radius: 4px;">No mobile image uploaded</p>')
     mobile_image_preview.short_description = "Mobile Image Preview"
 
     def icon_preview(self, obj):
@@ -214,7 +214,7 @@ class ServiceAdmin(admin.ModelAdmin):
                 '</div>',
                 obj.icon.url
             )
-        return format_html('<span style="color: #999;">No icon uploaded</span>')
+        return mark_safe('<span style="color: #999;">No icon uploaded</span>')
     icon_preview.short_description = "Icon Preview"
 
     actions = ['make_published', 'make_draft', 'make_archived']
@@ -279,7 +279,7 @@ class ServiceLeadAdmin(admin.ModelAdmin):
         if obj.service:
             url = reverse('admin:services_service_change', args=[obj.service.pk])
             return format_html('<a href="{}" style="color: #007bff; text-decoration: none;">{}</a>', url, obj.service.title[:50])
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     service_link.short_description = 'Service'
 
     def inquiry_type_badge(self, obj):
@@ -316,14 +316,14 @@ class ServiceLeadAdmin(admin.ModelAdmin):
 
     def contact_status(self, obj):
         if obj.is_contacted:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px;">✓ Contacted</span>')
-        return format_html('<span style="background-color: #ffc107; color: #000; padding: 4px 10px; border-radius: 12px; font-size: 11px;">⏳ Pending</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px;">✓ Contacted</span>')
+        return mark_safe('<span style="background-color: #ffc107; color: #000; padding: 4px 10px; border-radius: 12px; font-size: 11px;">⏳ Pending</span>')
     contact_status.short_description = 'Contact'
 
     def conversion_status(self, obj):
         if obj.is_converted:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">💰 Converted</span>')
-        return format_html('<span style="color: #999;">—</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">💰 Converted</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     conversion_status.short_description = 'Converted'
 
     def utm_summary(self, obj):
@@ -347,7 +347,7 @@ class ServiceLeadAdmin(admin.ModelAdmin):
                 '</div>',
                 mark_safe('<br>'.join(utm_fields))
             )
-        return format_html('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
+        return mark_safe('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
     utm_summary.short_description = 'UTM Summary'
 
     actions = ['mark_as_contacted', 'mark_as_converted', 'mark_as_uncontacted', 'mark_as_unconverted']

@@ -37,7 +37,7 @@ class ContactAdmin(admin.ModelAdmin):
         if obj.requirements:
             requirements = obj.requirements[:80] + "..." if len(obj.requirements) > 80 else obj.requirements
             return format_html('<span style="color: #333;">{}</span>', requirements)
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     requirements_preview.short_description = 'Requirements'
 
     def utm_summary(self, obj):
@@ -61,5 +61,5 @@ class ContactAdmin(admin.ModelAdmin):
                 '</div>',
                 mark_safe('<br>'.join(utm_fields))
             )
-        return format_html('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
+        return mark_safe('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
     utm_summary.short_description = 'UTM Summary'

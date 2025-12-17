@@ -52,8 +52,8 @@ class CaseStudyCategoryAdmin(admin.ModelAdmin):
 
     def is_active_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
-        return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
+        return mark_safe('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
     is_active_badge.short_description = 'Status'
 
     def case_study_count(self, obj):
@@ -130,7 +130,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
                 '<span style="color: #666; font-size: 12px; padding: 4px 8px; background: #f8f9fa; border-radius: 4px; display: inline-block;">{}</span>', 
                 short_title
             )
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     short_title_preview.short_description = 'Short Title'
 
     def client_name_display(self, obj):
@@ -139,7 +139,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
                 '<span style="background-color: #e3f2fd; color: #1976d2; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">🏢 {}</span>',
                 obj.client_name
             )
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     client_name_display.short_description = 'Client'
 
     def status_badge(self, obj):
@@ -157,8 +157,8 @@ class CaseStudyAdmin(admin.ModelAdmin):
 
     def is_featured_badge(self, obj):
         if obj.is_featured:
-            return format_html('<span style="background-color: #ffc107; color: #000; padding: 3px 8px; border-radius: 10px; font-size: 10px;">⭐ Featured</span>')
-        return format_html('<span style="color: #999;">—</span>')
+            return mark_safe('<span style="background-color: #ffc107; color: #000; padding: 3px 8px; border-radius: 10px; font-size: 10px;">⭐ Featured</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     is_featured_badge.short_description = 'Featured'
 
     def estimated_time_display(self, obj):
@@ -167,7 +167,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
                 '<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">⏱ {} min</span>',
                 obj.estimated_time
             )
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     estimated_time_display.short_description = 'Read Time'
 
     def engagement_score(self, obj):
@@ -222,7 +222,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
                 '</div>',
                 image_url, file_name, size_str, image_url
             )
-        return format_html(
+        return mark_safe(
             '<div style="padding: 30px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 8px; text-align: center; border: 2px dashed #ccc;">'
             '<p style="color: #999; font-size: 14px; margin: 0;">🖼️ No banner image uploaded</p>'
             '<p style="color: #bbb; font-size: 12px; margin: 5px 0 0 0;">Recommended: Wide format (1920x600px)</p>'
@@ -257,7 +257,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
                 '</div>',
                 image_url, file_name, size_str, image_url
             )
-        return format_html(
+        return mark_safe(
             '<div style="padding: 30px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 8px; text-align: center; border: 2px dashed #ccc;">'
             '<p style="color: #999; font-size: 14px; margin: 0;">📱 No mobile image uploaded</p>'
             '<p style="color: #bbb; font-size: 12px; margin: 5px 0 0 0;">Recommended: Mobile format (768x400px)</p>'
@@ -278,7 +278,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
                 '</div>',
                 clean_content
             )
-        return format_html(
+        return mark_safe(
             '<div style="padding: 20px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; text-align: center; border: 2px dashed #f59e0b;">'
             '<p style="color: #92400e; font-size: 14px; margin: 0; font-weight: 500;">⚠️ No content available</p>'
             '</div>'
@@ -337,7 +337,7 @@ class CaseStudyLeadAdmin(admin.ModelAdmin):
         if obj.case_study:
             url = reverse('admin:casestudy_casestudy_change', args=[obj.case_study.pk])
             return format_html('<a href="{}" style="color: #007bff; text-decoration: none;">{}</a>', url, obj.case_study.title[:50])
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     case_study_link.short_description = 'Case Study'
 
     def job_title_display(self, obj):
@@ -346,7 +346,7 @@ class CaseStudyLeadAdmin(admin.ModelAdmin):
                 '<span style="background-color: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 10px; font-size: 11px;">💼 {}</span>',
                 obj.job_title
             )
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     job_title_display.short_description = 'Job Title'
 
     def lead_source_badge(self, obj):
@@ -367,14 +367,14 @@ class CaseStudyLeadAdmin(admin.ModelAdmin):
 
     def contact_status(self, obj):
         if obj.is_contacted:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px;">✓ Contacted</span>')
-        return format_html('<span style="background-color: #ffc107; color: #000; padding: 4px 10px; border-radius: 12px; font-size: 11px;">⏳ Pending</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px;">✓ Contacted</span>')
+        return mark_safe('<span style="background-color: #ffc107; color: #000; padding: 4px 10px; border-radius: 12px; font-size: 11px;">⏳ Pending</span>')
     contact_status.short_description = 'Contact'
 
     def conversion_status(self, obj):
         if obj.is_converted:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">💰 Converted</span>')
-        return format_html('<span style="color: #999;">—</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">💰 Converted</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     conversion_status.short_description = 'Converted'
 
     def utm_summary(self, obj):
@@ -396,7 +396,7 @@ class CaseStudyLeadAdmin(admin.ModelAdmin):
                 '</div>',
                 mark_safe('<br>'.join(utm_fields))
             )
-        return format_html('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
+        return mark_safe('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
     utm_summary.short_description = 'UTM Summary'
 
     actions = ['mark_as_contacted', 'mark_as_converted', 'mark_as_uncontacted', 'mark_as_unconverted']

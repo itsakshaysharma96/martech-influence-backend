@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from .models import SocialMedia
 
 
@@ -63,7 +64,7 @@ class SocialMediaAdmin(admin.ModelAdmin):
                 '<a href="{}" target="_blank" style="color: #007bff; text-decoration: none; font-weight: bold;">🔗 {}</a>',
                 obj.url, obj.url[:50] + "..." if len(obj.url) > 50 else obj.url
             )
-        return format_html('<span style="color: #999;">—</span>')
+        return mark_safe('<span style="color: #999;">—</span>')
     url_link.short_description = 'URL'
 
     def icon_preview(self, obj):
@@ -89,13 +90,13 @@ class SocialMediaAdmin(admin.ModelAdmin):
                     '</div>',
                     file_name, obj.icon.url
                 )
-        return format_html('<span style="color: #999;">No icon uploaded</span>')
+        return mark_safe('<span style="color: #999;">No icon uploaded</span>')
     icon_preview.short_description = 'Icon Preview'
 
     def is_active_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
-        return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
+            return mark_safe('<span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✓ Active</span>')
+        return mark_safe('<span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">✗ Inactive</span>')
     is_active_badge.short_description = 'Status'
 
     actions = ['activate', 'deactivate']
