@@ -64,29 +64,29 @@ class Blog(TimeStampedModel):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_posts', null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='blogs')
     tags = models.ManyToManyField(Tag, blank=True, related_name='blogs')
-    
+
     # Content fields
     short_description = models.TextField(max_length=1000, null=True, blank=True, help_text="Extended description or summary of the blog post")
     content = models.TextField(null=True, blank=True)
     banner_image = models.ImageField(upload_to='blog_images/banner/', blank=True, null=True, help_text="Banner image for desktop/wide screens")
     mobile_image = models.ImageField(upload_to='blog_images/mobile/', blank=True, null=True, help_text="Mobile optimized image for small screens")
     estimated_time = models.PositiveIntegerField(help_text="Estimated reading time in minutes", null=True, blank=True)
-    
+
     # SEO fields
     meta_title = models.CharField(max_length=200, blank=True, null=True)
     meta_description = models.TextField(max_length=300, blank=True, null=True)
     meta_keywords = models.CharField(max_length=500, blank=True, null=True, help_text="Comma-separated keywords for SEO")
-    
+
     # Status and visibility
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', null=True, blank=True)
     is_featured = models.BooleanField(default=False, null=True, blank=True)
     is_pinned = models.BooleanField(default=False, null=True, blank=True)
-    
+
     # Engagement metrics
     views_count = models.PositiveIntegerField(default=0, null=True, blank=True)
     likes_count = models.PositiveIntegerField(default=0, null=True, blank=True)
     shares_count = models.PositiveIntegerField(default=0, null=True, blank=True)
-    
+
     # Timestamps
     published_at = models.DateTimeField(null=True, blank=True)
 
@@ -134,7 +134,7 @@ class BlogLeads(TimeStampedModel):
     is_contacted = models.BooleanField(default=False, null=True, blank=True)
     is_converted = models.BooleanField(default=False, null=True, blank=True)
     notes = models.TextField(blank=True, null=True, help_text="Internal notes about the lead")
-    
+
     # UTM Tracking fields
     utm_source = models.CharField(max_length=100, blank=True, null=True)
     utm_medium = models.CharField(max_length=100, blank=True, null=True)

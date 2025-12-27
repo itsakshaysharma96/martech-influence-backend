@@ -45,7 +45,7 @@ class DepartmentAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at']
     list_per_page = 25
-    
+
     fieldsets = (
         ('Department Information', {
             'fields': ('name', 'slug', 'description', 'is_active')
@@ -76,7 +76,7 @@ class JobCategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at']
     list_per_page = 25
-    
+
     fieldsets = (
         ('Category Information', {
             'fields': ('name', 'slug', 'description', 'is_active')
@@ -107,7 +107,7 @@ class JobLocationAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at']
     list_per_page = 25
-    
+
     fieldsets = (
         ('Location Information', {
             'fields': ('name', 'slug', 'city', 'state', 'country', 'is_remote', 'is_active')
@@ -144,7 +144,7 @@ class JobTypeAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at']
     list_per_page = 25
-    
+
     fieldsets = (
         ('Job Type Information', {
             'fields': ('name', 'slug', 'description', 'is_active')
@@ -191,7 +191,7 @@ class JobPostingAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     list_per_page = 25
     list_editable = ['is_featured', 'is_urgent']
-    
+
     fieldsets = (
         ('📝 Basic Information', {
             'fields': ('title', 'short_title', 'slug', 'department', 'category', 'job_type', 'location', 'recruiter', 'status'),
@@ -331,7 +331,7 @@ class JobApplicationAdmin(admin.ModelAdmin):
     ]
     date_hierarchy = 'created_at'
     list_per_page = 25
-    
+
     fieldsets = (
         ('📋 Application Information', {
             'fields': ('job_posting', 'status', 'source', 'applicant_info_display')
@@ -382,7 +382,7 @@ class JobApplicationAdmin(admin.ModelAdmin):
             info.append(f"🏢 {obj.current_company}")
         if obj.years_of_experience:
             info.append(f"⏱ {obj.years_of_experience} years")
-        
+
         if info:
             return format_html(
                 '<div style="padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin: 10px 0;">'
@@ -486,7 +486,7 @@ class JobApplicationAdmin(admin.ModelAdmin):
             utm_fields.append(f"Campaign: <strong>{obj.utm_campaign}</strong>")
         if obj.utm_refcode:
             utm_fields.append(f"Ref Code: <strong>{obj.utm_refcode}</strong>")
-        
+
         if utm_fields:
             return format_html(
                 '<div style="padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin: 10px 0;">'
@@ -514,3 +514,12 @@ class JobApplicationAdmin(admin.ModelAdmin):
         updated = queryset.update(status='interview_scheduled')
         self.message_user(request, f'{updated} application(s) marked as interview scheduled.')
     mark_interview_scheduled.short_description = "Mark selected as interview scheduled"
+
+
+# Unregister all career models from admin
+admin.site.unregister(Department)
+admin.site.unregister(JobCategory)
+admin.site.unregister(JobLocation)
+admin.site.unregister(JobType)
+admin.site.unregister(JobPosting)
+admin.site.unregister(JobApplication)

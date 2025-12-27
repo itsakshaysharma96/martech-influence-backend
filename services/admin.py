@@ -36,7 +36,7 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at', 'icon_preview']
     list_per_page = 25
-    
+
     fieldsets = (
         ('Category Information', {
             'fields': ('name', 'slug', 'description', 'icon', 'icon_preview', 'is_active')
@@ -95,7 +95,7 @@ class ServiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     list_per_page = 25
     list_editable = ['is_featured', 'is_popular']
-    
+
     fieldsets = (
         ('📝 Basic Information', {
             'fields': ('title', 'short_title', 'slug', 'category', 'author', 'status'),
@@ -143,7 +143,7 @@ class ServiceAdmin(admin.ModelAdmin):
         if obj.short_title:
             short_title = obj.short_title[:60] + "..." if len(obj.short_title) > 60 else obj.short_title
             return format_html(
-                '<span style="color: #666; font-size: 12px; padding: 4px 8px; background: #f8f9fa; border-radius: 4px; display: inline-block;">{}</span>', 
+                '<span style="color: #666; font-size: 12px; padding: 4px 8px; background: #f8f9fa; border-radius: 4px; display: inline-block;">{}</span>',
                 short_title
             )
         return mark_safe('<span style="color: #999;">—</span>')
@@ -253,7 +253,7 @@ class ServiceLeadAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'utm_summary']
     date_hierarchy = 'created_at'
     list_per_page = 25
-    
+
     fieldsets = (
         ('👤 Lead Information', {
             'fields': ('service', 'inquiry_type', 'lead_source', 'full_name', 'email', 'phone', 'company', 'job_title', 'message'),
@@ -338,7 +338,7 @@ class ServiceLeadAdmin(admin.ModelAdmin):
             utm_fields.append(f"Term: <strong>{obj.utm_term}</strong>")
         if obj.utm_content:
             utm_fields.append(f"Content: <strong>{obj.utm_content}</strong>")
-        
+
         if utm_fields:
             return format_html(
                 '<div style="padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin: 10px 0;">'
@@ -371,3 +371,9 @@ class ServiceLeadAdmin(admin.ModelAdmin):
         updated = queryset.update(is_converted=False)
         self.message_user(request, f'{updated} lead(s) marked as not converted.')
     mark_as_unconverted.short_description = "Mark selected leads as not converted"
+
+
+# Unregister all services models from admin
+admin.site.unregister(ServiceCategory)
+admin.site.unregister(Service)
+admin.site.unregister(ServiceLead)
