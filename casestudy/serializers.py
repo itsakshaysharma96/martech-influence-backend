@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CaseStudyCategory, CaseStudy, CaseStudyLead
+from .models import CaseStudyCategory, CaseStudy, CaseStudyLead, CaseStudyTag
 
 
 class CaseStudyCategorySerializer(serializers.ModelSerializer):
@@ -8,9 +8,16 @@ class CaseStudyCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug', 'description', 'is_active', 'created_at', 'updated_at']
 
 
+
+class CaseStudyTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CaseStudyTag
+        fields = ['id', 'name', 'slug', 'created_at']
+        
 class CaseStudyListSerializer(serializers.ModelSerializer):
     """Serializer for case study list view"""
     category = CaseStudyCategorySerializer(read_only=True)
+    tags = CaseStudyTagSerializer(many=True, read_only=True)
     author_username = serializers.CharField(source='author.username', read_only=True)
     author_full_name = serializers.SerializerMethodField()
     
@@ -18,7 +25,7 @@ class CaseStudyListSerializer(serializers.ModelSerializer):
         model = CaseStudy
         fields = [
             'id', 'title', 'short_title', 'slug', 'author_username', 'author_full_name',
-            'category', 'short_description', 'banner_image', 'mobile_image',
+            'category', 'tags', 'short_description', 'banner_image', 'mobile_image',
             'client_name', 'client_industry', 'estimated_time', 'status',
             'is_featured', 'is_pinned', 'views_count', 'likes_count',
             'shares_count', 'downloads_count', 'published_at',

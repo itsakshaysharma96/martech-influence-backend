@@ -32,6 +32,22 @@ class CaseStudyCategory(TimeStampedModel):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
+class CaseStudyTag(TimeStampedModel):
+    """Model for case study tags"""
+    name = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    slug = models.SlugField(max_length=50, unique=True, blank=True, null=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name or "Unnamed Tag"
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.name:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
 
 class CaseStudy(TimeStampedModel):
     """Main case study model"""
@@ -46,7 +62,7 @@ class CaseStudy(TimeStampedModel):
     slug = models.SlugField(max_length=200, unique=True, blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='case_study_posts', null=True, blank=True)
     category = models.ForeignKey(CaseStudyCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='case_studies')
-    
+    tags = models.ManyToManyField(CaseStudyTag, blank=True, related_name='blogs')
     # Content fields
     short_description = models.TextField(max_length=1000, null=True, blank=True, help_text="Extended description or summary of the case study")
     content = models.TextField(null=True, blank=True)

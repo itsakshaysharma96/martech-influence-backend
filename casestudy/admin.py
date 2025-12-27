@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django import forms
 from tinymce.widgets import TinyMCE
-from .models import CaseStudyCategory, CaseStudy, CaseStudyLead
+from .models import CaseStudyCategory, CaseStudy, CaseStudyLead, CaseStudyTag
 
 
 class CaseStudyAdminForm(forms.ModelForm):
@@ -62,6 +62,30 @@ class CaseStudyCategoryAdmin(admin.ModelAdmin):
     case_study_count.short_description = 'Case Studies'
 
 
+
+@admin.register(CaseStudyTag)
+class CaseStudyTagAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'case_study_count', 'created_at']
+    search_fields = ['name']
+    prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ['created_at', 'updated_at']
+    list_per_page = 25
+
+    fieldsets = (
+        ('Tag Information', {
+            'fields': ('name', 'slug')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def case_study_count(self, obj):
+        count = obj.case_studies.count()
+        return format_html('<strong style="color: #007bff;">{}</strong>', count)
+    case_study_count.short_description = 'Case Studies'
+
 @admin.register(CaseStudy)
 class CaseStudyAdmin(admin.ModelAdmin):
     form = CaseStudyAdminForm
@@ -70,7 +94,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
         'is_featured', 'is_pinned', 'is_featured_badge', 'estimated_time_display', 'views_count', 
         'downloads_count', 'engagement_score', 'created_at', 'published_at'
     ]
-    list_filter = ['status', 'is_featured', 'is_pinned', 'category', 'client_industry', 'created_at', 'published_at']
+    list_filter = ['status', 'is_featured', 'is_pinned', 'category','tags', 'client_industry', 'created_at', 'published_at']
     search_fields = ['title', 'short_title', 'content', 'short_description', 'client_name', 'client_industry', 'meta_keywords']
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = [
@@ -81,7 +105,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     list_per_page = 25
     list_editable = ['is_featured', 'is_pinned']
-    
+    filter_horizontal = ['tags']
     fieldsets = (
         ('📝 Basic Information', {
             'fields': ('title', 'short_title', 'slug', 'author', 'category', 'status'),
