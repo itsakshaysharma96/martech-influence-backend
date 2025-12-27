@@ -59,8 +59,8 @@ class CaseStudyDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = CaseStudy
         fields = [
-            'id', 'title', 'short_title', 'slug', 'author', 'author_username', 'author_full_name',
-            'category', 'short_description', 'content', 'banner_image', 'mobile_image',
+            'id', 'title', 'slug', 'author', 'author_username', 'author_full_name',
+            'category', 'short_description', 'content', 'banner_image', 'logo_image','lp_image',
             'client_name', 'client_industry', 'project_duration', 'project_budget',
             'results_summary', 'estimated_time', 'meta_title', 'meta_description',
             'meta_keywords', 'status', 'is_featured', 'is_pinned',
