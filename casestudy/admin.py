@@ -65,7 +65,7 @@ class CaseStudyCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(CaseStudyTag)
 class CaseStudyTagAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug', 'case_study_count', 'created_at']
+    list_display = ['name', 'slug', 'created_at']
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at']
@@ -81,10 +81,6 @@ class CaseStudyTagAdmin(admin.ModelAdmin):
         }),
     )
 
-    def case_study_count(self, obj):
-        count = obj.case_studies.count()
-        return format_html('<strong style="color: #007bff;">{}</strong>', count)
-    case_study_count.short_description = 'Case Studies'
 
 @admin.register(CaseStudy)
 class CaseStudyAdmin(admin.ModelAdmin):
@@ -108,7 +104,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
     filter_horizontal = ['tags']
     fieldsets = (
         ('📝 Basic Information', {
-            'fields': ('title', 'short_title', 'slug', 'author', 'category', 'status'),
+            'fields': ('title', 'short_title', 'slug', 'author', 'category','tags', 'status'),
             'classes': ('wide',),
         }),
         ('👔 Client Information', {
