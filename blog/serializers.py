@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Tag, Blog, BlogLeads
+from .models import Category, Tag, Blog, BlogLeads, BlogDynamicField
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -14,19 +14,26 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug', 'created_at']
 
 
+class BlogDynamicFieldSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogDynamicField
+        fields = ['id', 'field_name', 'placeholder', 'sequence', 'is_active']
+
+
 class BlogListSerializer(serializers.ModelSerializer):
     """Serializer for blog list view"""
     category = CategorySerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     author_username = serializers.CharField(source='author.username', read_only=True)
     author_full_name = serializers.SerializerMethodField()
+    dynamic_fields = serializers.SerializerMethodField()
     
     class Meta:
         model = Blog
         fields = [
             'id', 'title', 'short_title', 'slug', 'author_username', 'author_full_name',
-            'category', 'tags', 'short_description', 'banner_image', 'mobile_image',
-            'estimated_time', 'status', 'is_featured', 'is_pinned',
+            'category', 'tags', 'short_description', 'banner_image', 'logo_image','lp_image',
+            'estimated_time', 'status', 'is_featured', 'is_pinned','dynamic_fields',
             'views_count', 'likes_count', 'shares_count', 'published_at',
             'created_at', 'updated_at'
         ]
@@ -36,6 +43,9 @@ class BlogListSerializer(serializers.ModelSerializer):
             return f"{obj.author.first_name} {obj.author.last_name}".strip() or obj.author.username
         return None
 
+    def get_dynamic_fields(self, obj):
+        qs = obj.dynamic_fields.filter(is_active=True).order_by('sequence')
+        return BlogDynamicFieldSerializer(qs, many=True).data
 
 class BlogDetailSerializer(serializers.ModelSerializer):
     """Serializer for blog detail view"""
@@ -98,8 +108,15 @@ class BlogLeadsCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating blog leads"""
     class Meta:
         model = BlogLeads
-        fields = [
-            'blog', 'name', 'email', 'phone', 'company', 'lead_source', 'message',
-            'utm_source', 'utm_medium', 'utm_campaign', 'utm_refcode'
-        ]
+        fields = ['blog', 'data']
+        extra_kwargs = {
+            'blog': {'required': True},
+            'data': {'required': True},
+        }
+
+    def validate_data(self, value):
+        """Optional: Validate dynamic fields format"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Data must be a JSON object")
+        return value
 

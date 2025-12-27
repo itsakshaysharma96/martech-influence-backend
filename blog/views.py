@@ -4,10 +4,10 @@ from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from martech_influence_backend.utils import create_response
-from .models import Blog, BlogLeads
+from .models import Blog, BlogLeads, BlogDynamicField
 from .serializers import (
     BlogListSerializer, BlogDetailSerializer,
-    BlogLeadsCreateSerializer
+    BlogLeadsCreateSerializer, BlogDynamicFieldSerializer
 )
 
 
@@ -111,6 +111,47 @@ class BlogViewSet(viewsets.ViewSet):
             data=serializer.data
         )
 
+    def dynamic_fields(self, request):
+        """
+        Get dynamic fields for a blog
+        ?blog_id=<id>
+        """
+
+        blog_id = request.query_params.get('blog_id')
+
+        if not blog_id:
+            return create_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                message="blog_id query parameter is required",
+                message_code="BLOG_ID_REQUIRED",
+                status=False
+            )
+
+        if not Blog.objects.filter(id=blog_id).exists():
+            return create_response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Blog not found",
+                message_code="BLOG_NOT_FOUND",
+                status=False
+            )
+
+        fields_qs = BlogDynamicField.objects.filter(
+            blog_id=blog_id,
+            is_active=True
+        ).order_by('sequence')
+
+        serializer = BlogDynamicFieldSerializer(fields_qs, many=True)
+
+        return create_response(
+            status_code=status.HTTP_200_OK,
+            message="Blog dynamic fields retrieved successfully",
+            message_code="BLOG_DYNAMIC_FIELDS_RETRIEVED",
+            data={
+                "blog_id": int(blog_id),
+                "total_fields": fields_qs.count(),
+                "fields": serializer.data
+            }
+        )
 
 class BlogLeadsViewSet(viewsets.ViewSet):
     """
@@ -119,145 +160,92 @@ class BlogLeadsViewSet(viewsets.ViewSet):
     
     @swagger_auto_schema(
         operation_description="""
-        Submit a new blog lead/inquiry.
-        
+        Submit a new case study lead/inquiry.
+
         **Content Type:** `application/json`
-        
-        **Headers:**
-        - `Content-Type: application/json` (Required)
-        
+
         **Field Requirements:**
-        - All fields are **optional** (can be null/blank)
-        - However, it's recommended to provide at least `name` and `email`
-        
+        - All fields are optional
+        - Recommended: `name` and `email`
+
         **Lead Source Options:**
-        - `newsletter` - Newsletter Signup
-        - `download` - Resource Download
+        - `download` - Case Study Download
         - `contact` - Contact Form
         - `demo` - Demo Request
+        - `consultation` - Consultation Request
+        - `newsletter` - Newsletter Signup
         - `other` - Other (default)
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=[],  # All fields are optional
             properties={
-                'blog': openapi.Schema(
+                'case_study': openapi.Schema(
                     type=openapi.TYPE_INTEGER,
-                    description='Blog ID (optional) - ID of the blog post related to this lead',
+                    description='ID of the related case study',
                     example=1
                 ),
-                'name': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Full name of the lead (optional, max 100 characters)',
-                    example='John Doe'
-                ),
-                'email': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format=openapi.FORMAT_EMAIL,
-                    description='Email address of the lead (optional)',
-                    example='john.doe@example.com'
-                ),
-                'phone': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Phone number (optional, max 20 characters)',
-                    example='+1234567890'
-                ),
-                'company': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Company name (optional, max 100 characters)',
-                    example='Acme Corp'
-                ),
-                'lead_source': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    enum=['newsletter', 'download', 'contact', 'demo', 'other'],
-                    description='Source of the lead (optional, default: "other")',
-                    example='contact'
-                ),
-                'message': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Message or inquiry details (optional)',
-                    example='I am interested in learning more about this blog post.'
-                ),
-                'utm_source': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='UTM source parameter for tracking (optional, max 100 characters)',
-                    example='google'
-                ),
-                'utm_medium': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='UTM medium parameter for tracking (optional, max 100 characters)',
-                    example='cpc'
-                ),
-                'utm_campaign': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='UTM campaign parameter for tracking (optional, max 100 characters)',
-                    example='summer_sale'
-                ),
-                'utm_refcode': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='UTM reference code for tracking (optional, max 100 characters)',
-                    example='REF123'
-                ),
+                'data': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    description='Dynamic lead data like name, email, phone, etc.',
+                    example={
+                        "name": "Jane Smith",
+                        "email": "jane.smith@example.com",
+                        "phone": "+1234567890",
+                        "company": "Tech Corp",
+                        "job_title": "Marketing Manager",
+                        "lead_source": "download",
+                        "message": "I would like to download this case study.",
+                        "utm_source": "google",
+                        "utm_medium": "cpc",
+                        "utm_campaign": "case_study_promo",
+                        "utm_refcode": "REF456"
+                    }
+                )
             },
-            example={
-                'blog': 1,
-                'name': 'John Doe',
-                'email': 'john.doe@example.com',
-                'phone': '+1234567890',
-                'company': 'Acme Corp',
-                'lead_source': 'contact',
-                'message': 'I am interested in learning more about this blog post.',
-                'utm_source': 'google',
-                'utm_medium': 'cpc',
-                'utm_campaign': 'blog_promotion',
-                'utm_refcode': 'REF123'
-            }
+            required=[]
         ),
         responses={
             201: openapi.Response(
                 description='Blog lead created successfully',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, example=True),
-                        'status_code': openapi.Schema(type=openapi.TYPE_INTEGER, example=201),
-                        'message_code': openapi.Schema(type=openapi.TYPE_STRING, example='BLOG_LEAD_CREATED'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, example='Blog Lead Submitted Successfully'),
-                        'data': openapi.Schema(type=openapi.TYPE_OBJECT)
+                examples={
+                    "application/json": {
+                        "status": True,
+                        "status_code": 201,
+                        "message": "Lead created successfully",
+                        "message_code": "CASE_STUDY_LEAD_CREATED",
+                        "data": {
+                            "id": 12,
+                            "case_study_id": 1,
+                            "data": {
+                                "name": "Jane Smith",
+                                "email": "jane.smith@example.com"
+                            }
+                        }
                     }
-                )
+                }
             ),
-            400: openapi.Response(
-                description='Bad request - validation errors',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, example=False),
-                        'status_code': openapi.Schema(type=openapi.TYPE_INTEGER, example=400),
-                        'message_code': openapi.Schema(type=openapi.TYPE_STRING, example='BLOG_LEAD_CREATION_FAILED'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, example='Blog Lead Submission Failed'),
-                        'data': openapi.Schema(type=openapi.TYPE_OBJECT, description='Validation errors')
-                    }
-                )
-            )
+            400: openapi.Response(description='Bad request - validation errors')
         },
         tags=['Blog Leads']
     )
     def create(self, request):
-        """Create a new blog lead"""
         serializer = BlogLeadsCreateSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            lead = serializer.save()
             return create_response(
                 status_code=status.HTTP_201_CREATED,
-                message="Blog lead submitted successfully",
+                message="Lead created successfully",
                 message_code="BLOG_LEAD_CREATED",
-                data=serializer.data
+                data={
+                    "id": lead.id,
+                    "blog_id": lead.blog.id if lead.blog else None,
+                    "data": lead.data
+                }
             )
         return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
-            message="Blog lead submission failed",
-            message_code="BLOG_LEAD_CREATION_FAILED",
-            status=False,
-            data=serializer.errors
+            message="Invalid data",
+            message_code="INVALID_LEAD_DATA",
+            data=serializer.errors,
+            status=False
         )

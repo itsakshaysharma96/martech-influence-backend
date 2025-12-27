@@ -49,6 +49,28 @@ class CaseStudyTag(TimeStampedModel):
         super().save(*args, **kwargs)
 
 
+class CaseStudyDynamicField(TimeStampedModel):
+    case_study = models.ForeignKey(
+        'CaseStudy', 
+        on_delete=models.CASCADE, 
+        related_name='dynamic_fields'
+    )
+    field_name = models.CharField(max_length=100, help_text="The field label (e.g., Email, Mobile No)")
+    placeholder = models.CharField(max_length=200, blank=True, null=True, help_text="The placeholder text for this field")
+    sequence = models.IntegerField(
+        default=1,
+        help_text="Order of the field in the case study form"
+    )
+    is_active = models.BooleanField(default=True, help_text="Whether this field is active or not")
+
+    class Meta:
+        verbose_name = "Case Study Dynamic Field"
+        verbose_name_plural = "Case Study Dynamic Fields"
+
+    def __str__(self):
+        return f"{self.field_name} ({self.case_study.title})"
+
+        
 class CaseStudy(TimeStampedModel):
     """Main case study model"""
     STATUS_CHOICES = [
@@ -58,7 +80,7 @@ class CaseStudy(TimeStampedModel):
     ]
 
     title = models.CharField(max_length=200, null=True, blank=True)
-    short_title = models.CharField(max_length=300, null=True, blank=True, help_text="Short title or secondary heading for the case study")
+    # short_title = models.CharField(max_length=300, null=True, blank=True, help_text="Short title or secondary heading for the case study")
     slug = models.SlugField(max_length=200, unique=True, blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='case_study_posts', null=True, blank=True)
     category = models.ForeignKey(CaseStudyCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='case_studies')
@@ -66,8 +88,9 @@ class CaseStudy(TimeStampedModel):
     # Content fields
     short_description = models.TextField(max_length=1000, null=True, blank=True, help_text="Extended description or summary of the case study")
     content = models.TextField(null=True, blank=True)
-    banner_image = models.ImageField(upload_to='casestudy_images/banner/', blank=True, null=True, help_text="Banner image for desktop/wide screens")
-    mobile_image = models.ImageField(upload_to='casestudy_images/mobile/', blank=True, null=True, help_text="Mobile optimized image for small screens")
+    banner_image = models.ImageField(upload_to='casestudy_images/banner/', blank=True, null=True,help_text="Banner image for desktop/wide screens (Recommended: 300x400)")
+    logo_image = models.ImageField(upload_to='casestudy_images/mobile/', blank=True, null=True, help_text="Logo image (Recommended: 250x250)")
+    lp_image = models.ImageField(upload_to='casestudy_images/lp/', blank=True, null=True, help_text="Landing page image (Recommended: 600x600)")
     estimated_time = models.PositiveIntegerField(help_text="Estimated reading time in minutes", null=True, blank=True)
     
     # Case Study specific fields
@@ -120,46 +143,15 @@ class CaseStudy(TimeStampedModel):
     def get_absolute_url(self):
         return reverse('casestudy:detail', kwargs={'slug': self.slug})
 
-
-class CaseStudyLead(TimeStampedModel):
-    """Model for tracking leads generated from case studies"""
-    LEAD_SOURCE_CHOICES = [
-        ('download', 'Case Study Download'),
-        ('contact', 'Contact Form'),
-        ('demo', 'Demo Request'),
-        ('consultation', 'Free Consultation'),
-        ('newsletter', 'Newsletter Signup'),
-        ('other', 'Other'),
-    ]
-
-    case_study = models.ForeignKey(CaseStudy, on_delete=models.CASCADE, related_name='leads', null=True, blank=True)
-    name = models.CharField(max_length=100, null=True, blank=True)
-    email = models.EmailField(null=True, blank=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    company = models.CharField(max_length=100, blank=True, null=True)
-    job_title = models.CharField(max_length=100, blank=True, null=True, help_text="Job title or position")
-    lead_source = models.CharField(max_length=20, choices=LEAD_SOURCE_CHOICES, default='other', null=True, blank=True)
-    message = models.TextField(blank=True, null=True)
-    is_contacted = models.BooleanField(default=False, null=True, blank=True)
-    is_converted = models.BooleanField(default=False, null=True, blank=True)
-    notes = models.TextField(blank=True, null=True, help_text="Internal notes about the lead")
     
-    # UTM Tracking fields
-    utm_source = models.CharField(max_length=100, blank=True, null=True)
-    utm_medium = models.CharField(max_length=100, blank=True, null=True)
-    utm_campaign = models.CharField(max_length=100, blank=True, null=True)
-    utm_refcode = models.CharField(max_length=100, blank=True, null=True)
-
-    class Meta:
-        verbose_name_plural = "Case Study Leads"
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['-created_at']),
-            models.Index(fields=['is_contacted']),
-            models.Index(fields=['is_converted']),
-        ]
+class CaseStudyLead(TimeStampedModel):
+    case_study = models.ForeignKey(
+        CaseStudy, on_delete=models.CASCADE, related_name='field_values'
+    )
+    data = models.JSONField(default=dict,blank=True,
+        help_text="Stores dynamic lead data like name, email, mobile etc"
+    )
 
     def __str__(self):
-        case_study_title = self.case_study.title if self.case_study else "No Case Study"
-        name = self.name or "Anonymous"
-        return f"{name} - {case_study_title}"
+        return f"Lead for {self.case_study.title}"
+    

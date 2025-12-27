@@ -50,12 +50,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'import_export',
     'tinymce',
     'drf_yasg',  # Swagger/OpenAPI documentation
     'blog',
     'casestudy',
     'career',
     'contact',
+    'privacy_policy',
     'socialmedia',
     'services',
 ]

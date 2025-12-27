@@ -315,107 +315,54 @@ class BlogAdmin(admin.ModelAdmin):
 
 @admin.register(BlogLeads)
 class BlogLeadsAdmin(admin.ModelAdmin):
-    list_display = [
-        'name', 'email', 'blog_link', 'lead_source_badge',
-        'utm_source', 'contact_status', 'conversion_status', 'created_at'
-    ]
-    list_filter = ['lead_source', 'is_contacted', 'is_converted', 'utm_source', 'utm_medium', 'utm_campaign', 'created_at']
-    search_fields = ['name', 'email', 'company', 'blog__title', 'utm_source', 'utm_campaign']
-    readonly_fields = ['created_at', 'updated_at', 'utm_summary']
-    date_hierarchy = 'created_at'
-    list_per_page = 25
+    list_display = ('id', 'blog', 'dynamic_columns', 'created_at')
+    readonly_fields = ('formatted_data','created_at', 'updated_at')
+    list_filter = ('blog', 'created_at')
+    search_fields = ('data',)
 
     fieldsets = (
-        ('👤 Lead Information', {
-            'fields': ('blog', 'name', 'email', 'phone', 'company', 'lead_source', 'message')
+        ('Blog Info', {
+            'fields': ('blog',)
         }),
-        ('📊 UTM Tracking', {
-            'fields': ('utm_source', 'utm_medium', 'utm_campaign', 'utm_refcode', 'utm_summary'),
-            'classes': ('collapse',)
-        }),
-        ('✅ Status & Notes', {
-            'fields': ('is_contacted', 'is_converted', 'notes')
-        }),
-        ('🕐 Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
+        ('Lead Data', {
+            'fields': ('formatted_data',)
         }),
     )
 
-    def blog_link(self, obj):
-        if obj.blog:
-            url = reverse('admin:blog_blog_change', args=[obj.blog.pk])
-            return format_html('<a href="{}" style="color: #007bff; text-decoration: none;">{}</a>', url, obj.blog.title[:50])
-        return mark_safe('<span style="color: #999;">—</span>')
-    blog_link.short_description = 'Blog'
+    def dynamic_columns(self, obj):
+        """
+        Show JSON fields one by one in list view
+        """
+        if not obj.data:
+            return "-"
 
-    def lead_source_badge(self, obj):
-        colors = {
-            'newsletter': '#17a2b8',
-            'download': '#28a745',
-            'contact': '#007bff',
-            'demo': '#ffc107',
-            'other': '#6c757d'
-        }
-        color = colors.get(obj.lead_source, '#6c757d')
-        return format_html(
-            '<span style="background-color: {}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px;">{}</span>',
-            color, obj.get_lead_source_display()
-        )
-    lead_source_badge.short_description = 'Source'
+        html = ""
+        for key, value in obj.data.items():
+            html += f"<strong>{key}:</strong> {value}<br>"
+        return mark_safe(html)
 
-    def contact_status(self, obj):
-        if obj.is_contacted:
-            return mark_safe('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px;">✓ Contacted</span>')
-        return mark_safe('<span style="background-color: #ffc107; color: #000; padding: 4px 10px; border-radius: 12px; font-size: 11px;">⏳ Pending</span>')
-    contact_status.short_description = 'Contact'
+    dynamic_columns.short_description = "Lead Details"
 
-    def conversion_status(self, obj):
-        if obj.is_converted:
-            return mark_safe('<span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">💰 Converted</span>')
-        return mark_safe('<span style="color: #999;">—</span>')
-    conversion_status.short_description = 'Converted'
+    def formatted_data(self, obj):
+        """
+        Show JSON nicely on detail page
+        """
+        if not obj.data:
+            return "-"
 
-    def utm_summary(self, obj):
-        utm_fields = []
-        if obj.utm_source:
-            utm_fields.append(f"Source: <strong>{obj.utm_source}</strong>")
-        if obj.utm_medium:
-            utm_fields.append(f"Medium: <strong>{obj.utm_medium}</strong>")
-        if obj.utm_campaign:
-            utm_fields.append(f"Campaign: <strong>{obj.utm_campaign}</strong>")
-        if obj.utm_refcode:
-            utm_fields.append(f"Ref Code: <strong>{obj.utm_refcode}</strong>")
+        html = "<table style='width:100%; border-collapse: collapse;'>"
+        for key, value in obj.data.items():
+            html += f"""
+                <tr>
+                    <td style="padding:8px; border:1px solid #ddd; width:30%; font-weight:bold;">
+                        {key}
+                    </td>
+                    <td style="padding:8px; border:1px solid #ddd;">
+                        {value}
+                    </td>
+                </tr>
+            """
+        html += "</table>"
+        return mark_safe(html)
 
-        if utm_fields:
-            return format_html(
-                '<div style="padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin: 10px 0;">'
-                '<h4 style="margin: 0 0 10px 0; color: white;">UTM Tracking Summary</h4>'
-                '<div style="line-height: 1.8;">{}</div>'
-                '</div>',
-                mark_safe('<br>'.join(utm_fields))
-            )
-        return mark_safe('<p style="color: #999; padding: 10px; background: #f5f5f5; border-radius: 4px;">No UTM tracking data available</p>')
-    utm_summary.short_description = 'UTM Summary'
-
-    actions = ['mark_as_contacted', 'mark_as_converted', 'mark_as_uncontacted', 'mark_as_unconverted']
-
-    def mark_as_contacted(self, request, queryset):
-        updated = queryset.update(is_contacted=True)
-        self.message_user(request, f'{updated} lead(s) marked as contacted.')
-    mark_as_contacted.short_description = "✓ Mark selected leads as contacted"
-
-    def mark_as_converted(self, request, queryset):
-        updated = queryset.update(is_converted=True)
-        self.message_user(request, f'{updated} lead(s) marked as converted.')
-    mark_as_converted.short_description = "💰 Mark selected leads as converted"
-
-    def mark_as_uncontacted(self, request, queryset):
-        updated = queryset.update(is_contacted=False)
-        self.message_user(request, f'{updated} lead(s) marked as not contacted.')
-    mark_as_uncontacted.short_description = "Mark selected leads as not contacted"
-
-    def mark_as_unconverted(self, request, queryset):
-        updated = queryset.update(is_converted=False)
-        self.message_user(request, f'{updated} lead(s) marked as not converted.')
-    mark_as_unconverted.short_description = "Mark selected leads as not converted"
+    formatted_data.short_description = "Submitted Lead Data"

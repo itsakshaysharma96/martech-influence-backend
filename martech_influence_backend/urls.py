@@ -85,6 +85,7 @@ urlpatterns = [
     path('api/contact/', include('contact.urls')),
     path('api/social-media/', include('socialmedia.urls')),
     path('api/services/', include('services.urls')),
+    path('api/privacy-policy/', include('privacy_policy.urls')),
 ]
 
 # Serve media files in development

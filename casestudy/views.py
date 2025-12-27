@@ -3,10 +3,10 @@ from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from martech_influence_backend.utils import create_response
-from .models import CaseStudy, CaseStudyLead
+from .models import CaseStudy, CaseStudyLead, CaseStudyDynamicField
 from .serializers import (
     CaseStudyListSerializer, CaseStudyDetailSerializer,
-    CaseStudyLeadCreateSerializer
+    CaseStudyLeadCreateSerializer,CaseStudyDynamicFieldSerializer
 )
 
 
@@ -111,26 +111,63 @@ class CaseStudyViewSet(viewsets.ViewSet):
             message_code="CASE_STUDY_RETRIEVED",
             data=serializer.data
         )
+        
+    def dynamic_fields(self, request):
+        """
+        Get dynamic fields for a case study
+        ?case_study_id=<id>
+        """
 
+        case_study_id = request.query_params.get('case_study_id')
 
+        if not case_study_id:
+            return create_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                message="case_study_id query parameter is required",
+                message_code="CASE_STUDY_ID_REQUIRED",
+                status=False
+            )
+
+        if not CaseStudy.objects.filter(id=case_study_id).exists():
+            return create_response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Case study not found",
+                message_code="CASE_STUDY_NOT_FOUND",
+                status=False
+            )
+
+        fields_qs = CaseStudyDynamicField.objects.filter(
+            case_study_id=case_study_id,
+            is_active=True
+        ).order_by('sequence')
+
+        serializer = CaseStudyDynamicFieldSerializer(fields_qs, many=True)
+
+        return create_response(
+            status_code=status.HTTP_200_OK,
+            message="Case study dynamic fields retrieved successfully",
+            message_code="CASE_STUDY_DYNAMIC_FIELDS_RETRIEVED",
+            data={
+                "case_study_id": int(case_study_id),
+                "total_fields": fields_qs.count(),
+                "fields": serializer.data
+            }
+        )
 class CaseStudyLeadViewSet(viewsets.ViewSet):
     """
     ViewSet for Case Study Leads - CREATE operation only
     """
-    
+
     @swagger_auto_schema(
         operation_description="""
         Submit a new case study lead/inquiry.
-        
+
         **Content Type:** `application/json`
-        
-        **Headers:**
-        - `Content-Type: application/json` (Required)
-        
+
         **Field Requirements:**
-        - All fields are **optional** (can be null/blank)
-        - However, it's recommended to provide at least `name` and `email`
-        
+        - All fields are optional
+        - Recommended: `name` and `email`
+
         **Lead Source Options:**
         - `download` - Case Study Download
         - `contact` - Contact Form
@@ -141,91 +178,74 @@ class CaseStudyLeadViewSet(viewsets.ViewSet):
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=[],
             properties={
                 'case_study': openapi.Schema(
                     type=openapi.TYPE_INTEGER,
-                    description='Case Study ID (optional) - ID of the case study related to this lead',
+                    description='ID of the related case study',
                     example=1
                 ),
-                'name': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Full name of the lead (optional, max 100 characters)',
-                    example='Jane Smith'
-                ),
-                'email': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format=openapi.FORMAT_EMAIL,
-                    description='Email address of the lead (optional)',
-                    example='jane.smith@example.com'
-                ),
-                'phone': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Phone number (optional, max 20 characters)',
-                    example='+1234567890'
-                ),
-                'company': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Company name (optional, max 100 characters)',
-                    example='Tech Corp'
-                ),
-                'job_title': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Job title or position (optional, max 100 characters)',
-                    example='Marketing Manager'
-                ),
-                'lead_source': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    enum=['download', 'contact', 'demo', 'consultation', 'newsletter', 'other'],
-                    description='Source of the lead (optional, default: "other")',
-                    example='download'
-                ),
-                'message': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Message or inquiry details (optional)',
-                    example='I would like to download this case study.'
-                ),
-                'utm_source': openapi.Schema(type=openapi.TYPE_STRING, description='UTM source (optional)', example='google'),
-                'utm_medium': openapi.Schema(type=openapi.TYPE_STRING, description='UTM medium (optional)', example='cpc'),
-                'utm_campaign': openapi.Schema(type=openapi.TYPE_STRING, description='UTM campaign (optional)', example='case_study_promo'),
-                'utm_refcode': openapi.Schema(type=openapi.TYPE_STRING, description='UTM reference code (optional)', example='REF456'),
+                'data': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    description='Dynamic lead data like name, email, phone, etc.',
+                    example={
+                        "name": "Jane Smith",
+                        "email": "jane.smith@example.com",
+                        "phone": "+1234567890",
+                        "company": "Tech Corp",
+                        "job_title": "Marketing Manager",
+                        "lead_source": "download",
+                        "message": "I would like to download this case study.",
+                        "utm_source": "google",
+                        "utm_medium": "cpc",
+                        "utm_campaign": "case_study_promo",
+                        "utm_refcode": "REF456"
+                    }
+                )
             },
-            example={
-                'case_study': 1,
-                'name': 'Jane Smith',
-                'email': 'jane.smith@example.com',
-                'phone': '+1234567890',
-                'company': 'Tech Corp',
-                'job_title': 'Marketing Manager',
-                'lead_source': 'download',
-                'message': 'I would like to download this case study.',
-                'utm_source': 'google',
-                'utm_medium': 'cpc',
-                'utm_campaign': 'case_study_promo',
-                'utm_refcode': 'REF456'
-            }
+            required=[]
         ),
         responses={
-            201: openapi.Response(description='Case study lead created successfully'),
+            201: openapi.Response(
+                description='Case study lead created successfully',
+                examples={
+                    "application/json": {
+                        "status": True,
+                        "status_code": 201,
+                        "message": "Lead created successfully",
+                        "message_code": "CASE_STUDY_LEAD_CREATED",
+                        "data": {
+                            "id": 12,
+                            "case_study_id": 1,
+                            "data": {
+                                "name": "Jane Smith",
+                                "email": "jane.smith@example.com"
+                            }
+                        }
+                    }
+                }
+            ),
             400: openapi.Response(description='Bad request - validation errors')
         },
         tags=['Case Study Leads']
     )
     def create(self, request):
-        """Create a new case study lead"""
         serializer = CaseStudyLeadCreateSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            lead = serializer.save()
             return create_response(
                 status_code=status.HTTP_201_CREATED,
-                message="Case study lead submitted successfully",
+                message="Lead created successfully",
                 message_code="CASE_STUDY_LEAD_CREATED",
-                data=serializer.data
+                data={
+                    "id": lead.id,
+                    "case_study_id": lead.case_study.id if lead.case_study else None,
+                    "data": lead.data
+                }
             )
         return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
-            message="Case study lead submission failed",
-            message_code="CASE_STUDY_LEAD_CREATION_FAILED",
-            status=False,
-            data=serializer.errors
+            message="Invalid data",
+            message_code="INVALID_LEAD_DATA",
+            data=serializer.errors,
+            status=False
         )

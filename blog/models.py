@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils.text import slugify
 
+from casestudy.models import CaseStudy
+
 
 class TimeStampedModel(models.Model):
     """Abstract base model with created_at and updated_at fields"""
@@ -50,6 +52,28 @@ class Tag(TimeStampedModel):
         super().save(*args, **kwargs)
 
 
+
+class BlogDynamicField(TimeStampedModel):
+    blog = models.ForeignKey(
+        'Blog', 
+        on_delete=models.CASCADE, 
+        related_name='dynamic_fields'
+    )
+    field_name = models.CharField(max_length=100, help_text="The field label (e.g., Email, Mobile No)")
+    placeholder = models.CharField(max_length=200, blank=True, null=True, help_text="The placeholder text for this field")
+    sequence = models.IntegerField(
+        default=1,
+        help_text="Order of the field in the case study form"
+    )
+    is_active = models.BooleanField(default=True, help_text="Whether this field is active or not")
+
+    class Meta:
+        verbose_name = "Blog Dynamic Field"
+        verbose_name_plural = "Blog Dynamic Fields"
+
+    def __str__(self):
+        return f"{self.field_name} ({self.blog.title})"
+
 class Blog(TimeStampedModel):
     """Main blog post model"""
     STATUS_CHOICES = [
@@ -68,8 +92,9 @@ class Blog(TimeStampedModel):
     # Content fields
     short_description = models.TextField(max_length=1000, null=True, blank=True, help_text="Extended description or summary of the blog post")
     content = models.TextField(null=True, blank=True)
-    banner_image = models.ImageField(upload_to='blog_images/banner/', blank=True, null=True, help_text="Banner image for desktop/wide screens")
-    mobile_image = models.ImageField(upload_to='blog_images/mobile/', blank=True, null=True, help_text="Mobile optimized image for small screens")
+    banner_image = models.ImageField(upload_to='blog_images/banner/', blank=True, null=True, help_text="Banner image for desktop/wide screens (Recommended: 300x400)")
+    logo_image = models.ImageField(upload_to='blog_images/mobile/', blank=True, null=True, help_text="Logo image (Recommended: 250x250)")
+    lp_image = models.ImageField(upload_to='casestudy_images/lp/', blank=True, null=True, help_text="Landing page image (Recommended: 600x600)")
     estimated_time = models.PositiveIntegerField(help_text="Estimated reading time in minutes", null=True, blank=True)
 
     # SEO fields
@@ -115,42 +140,13 @@ class Blog(TimeStampedModel):
 
 
 class BlogLeads(TimeStampedModel):
-    """Model for tracking leads generated from blog posts"""
-    LEAD_SOURCE_CHOICES = [
-        ('newsletter', 'Newsletter Signup'),
-        ('download', 'Resource Download'),
-        ('contact', 'Contact Form'),
-        ('demo', 'Demo Request'),
-        ('other', 'Other'),
-    ]
-
-    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='leads', null=True, blank=True)
-    name = models.CharField(max_length=100, null=True, blank=True)
-    email = models.EmailField(null=True, blank=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    company = models.CharField(max_length=100, blank=True, null=True)
-    lead_source = models.CharField(max_length=20, choices=LEAD_SOURCE_CHOICES, default='other', null=True, blank=True)
-    message = models.TextField(blank=True, null=True)
-    is_contacted = models.BooleanField(default=False, null=True, blank=True)
-    is_converted = models.BooleanField(default=False, null=True, blank=True)
-    notes = models.TextField(blank=True, null=True, help_text="Internal notes about the lead")
-
-    # UTM Tracking fields
-    utm_source = models.CharField(max_length=100, blank=True, null=True)
-    utm_medium = models.CharField(max_length=100, blank=True, null=True)
-    utm_campaign = models.CharField(max_length=100, blank=True, null=True)
-    utm_refcode = models.CharField(max_length=100, blank=True, null=True)
-
-    class Meta:
-        verbose_name_plural = "Blog Leads"
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['-created_at']),
-            models.Index(fields=['is_contacted']),
-            models.Index(fields=['is_converted']),
-        ]
+    blog = models.ForeignKey(
+        Blog, on_delete=models.CASCADE, related_name='field_values'
+    )
+    data = models.JSONField(default=dict,blank=True,
+        help_text="Stores dynamic lead data like name, email, mobile etc"
+    )
 
     def __str__(self):
-        blog_title = self.blog.title if self.blog else "No Blog"
-        name = self.name or "Anonymous"
-        return f"{name} - {blog_title}"
+        return f"Lead for {self.blog.title}"
+    
