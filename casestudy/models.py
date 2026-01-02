@@ -115,7 +115,19 @@ class CaseStudy(TimeStampedModel):
     likes_count = models.PositiveIntegerField(default=0, null=True, blank=True)
     shares_count = models.PositiveIntegerField(default=0, null=True, blank=True)
     downloads_count = models.PositiveIntegerField(default=0, null=True, blank=True, help_text="Number of times case study was downloaded")
-    
+
+    external_link = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text="External or landing page link for the case study"
+    )
+    downloadable_file = models.FileField(
+        upload_to='casestudy_files/',
+        blank=True,
+        null=True,
+        help_text="Upload case study file (PDF, DOCX, PPT, etc.)"
+    )
     # Timestamps
     published_at = models.DateTimeField(null=True, blank=True)
 

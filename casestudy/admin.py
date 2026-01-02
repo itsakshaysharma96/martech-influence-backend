@@ -3,8 +3,10 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django import forms
+from import_export.admin import ExportMixin
 from tinymce.widgets import TinyMCE
-from import_export import resources
+from import_export import resources,fields
+from import_export.widgets import CharWidget
 from import_export.admin import ImportExportModelAdmin
 from .models import CaseStudyCategory, CaseStudy, CaseStudyLead, CaseStudyTag, CaseStudyDynamicField
 
@@ -142,6 +144,10 @@ class CaseStudyAdmin(ImportExportModelAdmin):
             'fields': ('banner_image', 'logo_image', 'lp_image'),
             'classes': ('wide',),
         }),
+        ('⬇️ Download & Links', {
+            'fields': ('external_link', 'downloadable_file'),
+            'classes': ('wide',),
+        }),
         ('🔍 SEO Settings', {
             'fields': ('meta_title', 'meta_description', 'meta_keywords'),
             'classes': ('collapse',)
@@ -268,8 +274,41 @@ class CaseStudyAdmin(ImportExportModelAdmin):
         self.message_user(request, f'{updated} case study(ies) marked as archived.')
     make_archived.short_description = "Mark selected case studies as archived"
 
+class CaseStudyLeadResource(resources.ModelResource):
+    case_study = fields.Field(attribute='case_study', column_name='Case Study', widget=CharWidget())
+
+    class Meta:
+        model = CaseStudyLead
+        fields = ('id', 'case_study')  # we'll dynamically add JSON keys later
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Dynamically add JSON keys as columns
+        # Collect all keys from existing leads
+        from django.db.models import F
+        all_keys = set()
+        for lead in CaseStudyLead.objects.all():
+            all_keys.update(lead.data.keys() if lead.data else [])
+
+        for key in all_keys:
+            self.fields[key] = fields.Field(
+                column_name=key,
+                attribute='data',
+                widget=CharWidget()
+            )
+
+    def dehydrate(self, lead, field_name):
+        # For dynamic JSON keys, return their value or blank
+        if field_name in lead.data:
+            return lead.data.get(field_name, '')
+        return getattr(lead, field_name, '')
+    
+    
 @admin.register(CaseStudyLead)
-class CaseStudyLeadAdmin(admin.ModelAdmin):
+class CaseStudyLeadAdmin(ExportMixin, admin.ModelAdmin):
+    resource_class = CaseStudyLeadResource
+
     list_display = ('id', 'case_study', 'dynamic_columns', 'created_at')
     list_filter = ('case_study', 'created_at')
     search_fields = ('data',)
